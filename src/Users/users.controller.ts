@@ -2,11 +2,13 @@ import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } fr
 import { CreateUserDto } from './dtos/create-user.dto.js';
 import { UpdateUserDto } from './dtos/update-user.dto.js';
 import { UsersService } from './users.service.js';
+import { LoginUserDto } from './dtos/login-user.dto.js';
 
 @Controller()
 export class UsersController {
 
     constructor(private readonly users: UsersService) {}
+
 
     
 @Get("/api/users")
@@ -22,6 +24,11 @@ async GetUserById(@Param('id') id: number) {
 @Post("/api/users")
 async CreateUser(@Body() body: CreateUserDto) {
     return await this.users.createUser(body);
+}
+
+@Post("/api/users/login")
+async LoginUser(@Body() body: LoginUserDto) {
+    return await this.users.loginUser(body);
 }
 
 @Put("/api/users/:id")

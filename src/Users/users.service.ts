@@ -1,16 +1,22 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { CreateUserDto } from "./dtos/create-user.dto.js";
 import { UpdateUserDto } from "./dtos/update-user.dto.js";
 import { DATABASE } from "../database/database.provider.js";
 import type { Database } from "../database/database.provider.js";
 import { users } from "../database/schema/users.schema.js";
 import { eq } from "drizzle-orm";
+import { LoginUserDto } from "./dtos/login-user.dto.js";
+import * as bcrypt from 'bcrypt';
+import { JwtService } from "@nestjs/jwt";
 
 
 @Injectable()
 export class UsersService {
 
-        constructor(@Inject(DATABASE) private readonly db: Database) {}
+        constructor(
+            @Inject(DATABASE) private readonly db: Database,
+            private readonly jwtService: JwtService
+    ) {}
 
       
 
@@ -30,8 +36,24 @@ export class UsersService {
 
 
         public async createUser(user: CreateUserDto) {
+            user.password = await bcrypt.hash(user.password, 10);
            const [newuser] = await this.db.insert(users).values(user).returning();
            return newuser;
+        }
+
+        public async loginUser(user: LoginUserDto) {
+            const [existUser] = await this.db.select().from(users).where(eq(users.email, user.email));
+            if (!existUser) {
+                throw new UnauthorizedException('Email or password is not correct');
+            }
+            const isPasswordValid = await bcrypt.compare(user.password, existUser.password,);
+            if (!isPasswordValid) {
+                throw new UnauthorizedException('Email or password is not correct');
+            }
+            const payload = {id: existUser.id, email: existUser.email};
+            const token = this.jwtService.sign(payload);
+            
+            return {message: 'Login successfully', token};
         }
 
 
