@@ -34,6 +34,14 @@ export class UsersService {
            return user
         }
 
+        public async getMe(id: number) {
+            const [user] = await this.db.select().from(users).where(eq(users.id, id));
+            if (!user) {
+                 throw new NotFoundException('User not found');
+             }
+            return user
+         }
+
 
         public async createUser(user: CreateUserDto) {
             user.password = await bcrypt.hash(user.password, 10);

@@ -1,8 +1,9 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto.js';
 import { UpdateUserDto } from './dtos/update-user.dto.js';
 import { UsersService } from './users.service.js';
 import { LoginUserDto } from './dtos/login-user.dto.js';
+import { AuthGuard } from '../Guard/authguard.js';
 
 @Controller()
 export class UsersController {
@@ -15,9 +16,18 @@ export class UsersController {
 async GetAllUsers() {
     return await this.users.getAllUsers();
 }
+
+@Get("/api/users/me")
+@UseGuards(AuthGuard)
+async GetMe(@Req() request:any){
+    const id = request.user.id;
+    return await this.users.getMe(id);
+
+}
+
 @Get("/api/users/:id")
 async GetUserById(@Param('id') id: number) {
-   return await this.users.getUserById(id);
+    return await this.users.getUserById(id);
 
 }
 
